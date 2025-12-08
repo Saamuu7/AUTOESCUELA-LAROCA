@@ -1,8 +1,8 @@
-import { 
-  GraduationCap, 
-  Users, 
-  CalendarCheck, 
-  CreditCard, 
+import {
+  GraduationCap,
+  Users,
+  CalendarCheck,
+  CreditCard,
   TrendingUp,
   Clock,
   Car,
@@ -13,27 +13,53 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { mockStudents, mockPracticalClasses, mockTeachers, mockPayments, mockNotifications } from '@/data/mockData';
-import { format } from 'date-fns';
+import { useState } from 'react';
+import { mockStudents, mockPracticalClasses, mockTheoreticalClasses, mockTeachers, mockPayments } from '@/data/mockData';
+import { useNotifications } from '@/contexts/NotificationContext';
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, startOfMonth, subMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const weeklyData = [
-  { day: 'Lun', clases: 12 },
-  { day: 'Mar', clases: 15 },
-  { day: 'Mié', clases: 10 },
-  { day: 'Jue', clases: 14 },
-  { day: 'Vie', clases: 8 },
-];
-
 export default function Dashboard() {
+  const { notifications } = useNotifications();
+  const [chartType, setChartType] = useState<'practicas' | 'teoricas'>('practicas');
+
+  // Calculate weekly data dynamically based on chartType
+  const startOfCurrentWeek = startOfWeek(new Date(), { weekStartsOn: 1 });
+  const endOfCurrentWeek = endOfWeek(new Date(), { weekStartsOn: 1 });
+  const daysOfWeek = eachDayOfInterval({ start: startOfCurrentWeek, end: endOfCurrentWeek }).slice(0, 5); // Mon-Fri
+
+  const weeklyData = daysOfWeek.map(day => {
+    const dayName = format(day, 'EEE', { locale: es });
+    const formattedDayName = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+
+    // Select data source based on chartType
+    const dataSource = chartType === 'practicas' ? mockPracticalClasses : mockTheoreticalClasses;
+
+    const count = dataSource.filter(c =>
+      isSameDay(new Date(c.date), day)
+    ).length;
+
+    return { day: formattedDayName, clases: count };
+  });
+
   const activeStudents = mockStudents.filter(s => s.status === 'activo').length;
+
+  const startOfCurrentMonth = startOfMonth(new Date());
+  const studentsEnrolledThisMonth = mockStudents.filter(s =>
+    new Date(s.enrollmentDate) >= startOfCurrentMonth
+  ).length;
+  const previousMonthTotal = activeStudents - studentsEnrolledThisMonth;
+  const growthRate = previousMonthTotal > 0
+    ? Math.round(((activeStudents - previousMonthTotal) / previousMonthTotal) * 100)
+    : 100;
+
   const todayClasses = mockPracticalClasses.filter(
     c => format(c.date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
   ).length;
   const pendingPayments = mockPayments.filter(p => p.status === 'pendiente' || p.status === 'vencido');
   const totalPending = pendingPayments.reduce((acc, p) => acc + p.amount, 0);
-  const unreadNotifications = mockNotifications.filter(n => !n.read);
+  const unreadNotifications = notifications.filter(n => !n.read);
 
   const upcomingClasses = mockPracticalClasses
     .filter(c => c.status === 'programada')
@@ -52,10 +78,6 @@ export default function Dashboard() {
             Resumen de actividad · {format(new Date(), "EEEE, d 'de' MMMM", { locale: es })}
           </p>
         </div>
-        <Button className="w-fit">
-          <CalendarCheck className="mr-2 h-4 w-4" />
-          Nueva Clase
-        </Button>
       </div>
 
       {/* Stats Grid */}
@@ -66,7 +88,7 @@ export default function Dashboard() {
           description="matriculados actualmente"
           icon={GraduationCap}
           variant="primary"
-          trend={{ value: 12, isPositive: true }}
+          trend={{ value: growthRate, isPositive: growthRate >= 0 }}
         />
         <StatCard
           title="Profesores"
@@ -95,24 +117,42 @@ export default function Dashboard() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Weekly Chart */}
         <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="flex items-center gap-2 text-base font-semibold">
               <TrendingUp className="h-5 w-5 text-primary" />
-              Clases Esta Semana
+              Clases de la Semana
             </CardTitle>
+            <div className="flex gap-2 bg-muted/50 p-1 rounded-lg">
+              <Button
+                variant={chartType === 'practicas' ? 'default' : 'ghost'}
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => setChartType('practicas')}
+              >
+                Prácticas
+              </Button>
+              <Button
+                variant={chartType === 'teoricas' ? 'default' : 'ghost'}
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => setChartType('teoricas')}
+              >
+                Teóricas
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={weeklyData}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis 
-                    dataKey="day" 
+                  <XAxis
+                    dataKey="day"
                     className="text-xs fill-muted-foreground"
                     tickLine={false}
                     axisLine={false}
                   />
-                  <YAxis 
+                  <YAxis
                     className="text-xs fill-muted-foreground"
                     tickLine={false}
                     axisLine={false}
@@ -124,9 +164,9 @@ export default function Dashboard() {
                       borderRadius: '8px',
                     }}
                   />
-                  <Bar 
-                    dataKey="clases" 
-                    fill="hsl(var(--primary))" 
+                  <Bar
+                    dataKey="clases"
+                    fill="hsl(var(--primary))"
                     radius={[4, 4, 0, 0]}
                   />
                 </BarChart>
@@ -149,22 +189,20 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {mockNotifications.slice(0, 4).map((notification) => (
+            {notifications.slice(0, 4).map((notification) => (
               <div
                 key={notification.id}
-                className={`rounded-lg border p-3 transition-colors ${
-                  notification.read ? 'bg-background' : 'bg-primary/5 border-primary/20'
-                }`}
+                className={`rounded-lg border p-3 transition-colors ${notification.read ? 'bg-background' : 'bg-primary/5 border-primary/20'
+                  }`}
               >
                 <div className="flex items-start gap-3">
                   <div
-                    className={`mt-0.5 h-2 w-2 rounded-full ${
-                      notification.type === 'warning'
-                        ? 'bg-warning'
-                        : notification.type === 'error'
+                    className={`mt-0.5 h-2 w-2 rounded-full ${notification.type === 'warning'
+                      ? 'bg-warning'
+                      : notification.type === 'error'
                         ? 'bg-destructive'
                         : 'bg-primary'
-                    }`}
+                      }`}
                   />
                   <div className="flex-1 space-y-1">
                     <p className="text-sm font-medium">{notification.title}</p>
