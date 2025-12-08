@@ -26,7 +26,6 @@ const navigation = [
   { name: 'Alumnos', href: '/alumnos', icon: GraduationCap },
   { name: 'Clases Prácticas', href: '/clases-practicas', icon: CalendarDays },
   { name: 'Clases Teóricas', href: '/clases-teoricas', icon: BookOpen },
-  { name: 'Seguimiento', href: '/seguimiento', icon: TrendingUp },
   { name: 'Pagos', href: '/pagos', icon: CreditCard },
   { name: 'Notificaciones', href: '/notificaciones', icon: Bell },
   { name: 'Estadísticas', href: '/estadisticas', icon: BarChart3 },

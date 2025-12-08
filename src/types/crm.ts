@@ -65,8 +65,7 @@ export interface Student {
   license: LicenseType;
   status: StudentStatus;
   teacherId?: string;
-  theoreticalProgress: number;
-  practicalProgress: number;
+
   practicalClasses: number;
   observations: string;
   documents: Document[];

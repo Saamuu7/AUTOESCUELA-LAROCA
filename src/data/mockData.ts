@@ -39,8 +39,7 @@ export const mockStudents: Student[] = [
         license: 'B',
         status: 'activo',
         teacherId: '1',
-        theoreticalProgress: 45,
-        practicalProgress: 15,
+
         practicalClasses: 3,
         observations: 'Comienza prácticas. Atenta pero insegura en rotondas.',
         documents: [],

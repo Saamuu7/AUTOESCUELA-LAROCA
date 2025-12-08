@@ -11,7 +11,6 @@ import Alumnos from "./pages/Alumnos";
 import Profesores from "./pages/Profesores";
 import ClasesPracticas from "./pages/ClasesPracticas";
 import ClasesTeoricas from "./pages/ClasesTeoricas";
-import Seguimiento from "./pages/Seguimiento";
 import Pagos from "./pages/Pagos";
 import Notificaciones from "./pages/Notificaciones";
 import Estadisticas from "./pages/Estadisticas";
@@ -43,7 +42,6 @@ const App = () => (
                   <Route path="/alumnos" element={<Alumnos />} />
                   <Route path="/clases-practicas" element={<ClasesPracticas />} />
                   <Route path="/clases-teoricas" element={<ClasesTeoricas />} />
-                  <Route path="/seguimiento" element={<Seguimiento />} />
                   <Route path="/pagos" element={<Pagos />} />
                   <Route path="/notificaciones" element={<Notificaciones />} />
                   <Route path="/estadisticas" element={<Estadisticas />} />

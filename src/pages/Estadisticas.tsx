@@ -1,7 +1,10 @@
+import { useMemo } from 'react';
 import { BarChart3, TrendingUp, Users, GraduationCap, Target, Award } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatCard } from '@/components/ui/stat-card';
-import { mockStudents, mockTeachers, mockPracticalClasses, mockPayments } from '@/data/mockData';
+import { mockStudents, mockTeachers, mockPracticalClasses, mockTheoreticalClasses, mockPayments } from '@/data/mockData';
+import { startOfMonth, subMonths, format, startOfWeek, endOfWeek, eachWeekOfInterval, isSameMonth, isSameWeek, subWeeks } from 'date-fns';
+import { es } from 'date-fns/locale';
 import {
   BarChart,
   Bar,
@@ -18,44 +21,106 @@ import {
   Legend,
 } from 'recharts';
 
-const monthlyData = [
-  { month: 'Jul', clases: 85, alumnos: 12 },
-  { month: 'Ago', clases: 45, alumnos: 8 },
-  { month: 'Sep', clases: 120, alumnos: 18 },
-  { month: 'Oct', clases: 145, alumnos: 22 },
-  { month: 'Nov', clases: 130, alumnos: 20 },
-  { month: 'Dic', clases: 95, alumnos: 15 },
-];
-
-const teacherPerformance = [
-  { name: 'María', clases: 45, tasa: 92 },
-  { name: 'Carlos', clases: 38, tasa: 88 },
-  { name: 'Ana', clases: 22, tasa: 94 },
-];
-
-const licenseDistribution = [
-  { name: 'Permiso B', value: 75, color: 'hsl(var(--primary))' },
-  { name: 'Permiso A2', value: 15, color: 'hsl(var(--accent))' },
-  { name: 'Permiso A1', value: 7, color: 'hsl(var(--warning))' },
-  { name: 'Otros', value: 3, color: 'hsl(var(--muted-foreground))' },
-];
-
-const weeklyTrend = [
-  { week: 'Sem 1', practicas: 28, teoricas: 12 },
-  { week: 'Sem 2', practicas: 32, teoricas: 15 },
-  { week: 'Sem 3', practicas: 25, teoricas: 10 },
-  { week: 'Sem 4', practicas: 35, teoricas: 14 },
-];
-
 export default function Estadisticas() {
   const activeStudents = mockStudents.filter(s => s.status === 'activo').length;
   const completedStudents = mockStudents.filter(s => s.status === 'completado').length;
   const totalClasses = mockPracticalClasses.length;
   const totalRevenue = mockPayments.filter(p => p.status === 'pagado').reduce((acc, p) => acc + p.amount, 0);
 
-  const successRate = completedStudents > 0 
+  // 1. Student Trend
+  const startOfCurrentMonth = startOfMonth(new Date());
+  const studentsEnrolledThisMonth = mockStudents.filter(s =>
+    new Date(s.enrollmentDate) >= startOfCurrentMonth
+  ).length;
+  const totalStudents = mockStudents.length;
+  const previousMonthTotal = totalStudents - studentsEnrolledThisMonth;
+
+  const studentGrowthRate = previousMonthTotal > 0
+    ? Math.round(((totalStudents - previousMonthTotal) / previousMonthTotal) * 100)
+    : 0;
+
+  const successRate = completedStudents > 0
     ? Math.round((completedStudents / (completedStudents + mockStudents.filter(s => s.status === 'baja').length || 1)) * 100)
     : 0;
+
+  // 2. Dynamic Monthly Data (Last 6 Months)
+  const monthlyData = useMemo(() => {
+    const data = [];
+    for (let i = 5; i >= 0; i--) {
+      const date = subMonths(new Date(), i);
+      const monthLabel = format(date, 'MMM', { locale: es });
+
+      const classesCount = mockPracticalClasses.filter(c => isSameMonth(new Date(c.date), date)).length;
+      const newStudentsCount = mockStudents.filter(s => isSameMonth(new Date(s.enrollmentDate), date)).length;
+
+      data.push({
+        month: monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1),
+        clases: classesCount,
+        alumnos: newStudentsCount
+      });
+    }
+    return data;
+  }, []);
+
+  // 3. Dynamic License Distribution
+  const licenseDistribution = useMemo(() => {
+    const counts: Record<string, number> = { 'B': 0, 'A2': 0, 'A1': 0, 'C': 0, 'Otros': 0 };
+    mockStudents.forEach(s => {
+      if (counts[s.license] !== undefined) {
+        counts[s.license]++;
+      } else {
+        counts['Otros']++;
+      }
+    });
+
+    const colors: Record<string, string> = {
+      'B': 'hsl(var(--primary))',
+      'A2': 'hsl(var(--accent))',
+      'A1': 'hsl(var(--warning))',
+      'C': 'hsl(var(--destructive))',
+      'Otros': 'hsl(var(--muted-foreground))'
+    };
+
+    return Object.keys(counts).map(key => ({
+      name: `Permiso ${key}`,
+      value: counts[key],
+      color: colors[key] || colors['Otros']
+    })).filter(item => item.value > 0);
+  }, []);
+
+  // 4. Dynamic Weekly Trend (Last 4 Weeks)
+  const weeklyTrend = useMemo(() => {
+    const weeks = [];
+    const today = new Date();
+    for (let i = 3; i >= 0; i--) {
+      const date = subWeeks(today, i);
+      const weekLabel = `Sem ${4 - i}`;
+
+      const practicalCount = mockPracticalClasses.filter(c => isSameWeek(new Date(c.date), date, { weekStartsOn: 1 })).length;
+      const theoryCount = mockTheoreticalClasses.filter(c => isSameWeek(new Date(c.date), date, { weekStartsOn: 1 })).length;
+
+      weeks.push({
+        week: weekLabel,
+        practicas: practicalCount,
+        teoricas: theoryCount
+      });
+    }
+    return weeks;
+  }, []);
+
+  // 5. Dynamic Teacher Performance
+  const teacherPerformance = useMemo(() => {
+    return mockTeachers.map(t => {
+      const classesCount = mockPracticalClasses.filter(c => c.teacherId === t.id).length;
+      // Mock success rate based on 'stats' in teacher object if available, or random/fixed
+      // In a real app, this would calculate pass/fail of students assigned to them
+      return {
+        name: t.name.split(' ')[0], // First name
+        clases: classesCount,
+        tasa: t.stats.successRate || 0
+      };
+    }).sort((a, b) => b.clases - a.clases).slice(0, 3); // Top 3
+  }, []);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -66,7 +131,7 @@ export default function Estadisticas() {
           Panel de Estadísticas
         </h1>
         <p className="text-muted-foreground">
-          Análisis y métricas de la autoescuela
+          Análisis y métricas de la autoescuela (Datos en tiempo real)
         </p>
       </div>
 
@@ -77,7 +142,7 @@ export default function Estadisticas() {
           value={mockStudents.length}
           icon={GraduationCap}
           variant="primary"
-          trend={{ value: 15, isPositive: true }}
+          trend={{ value: Math.abs(studentGrowthRate), isPositive: studentGrowthRate >= 0 }}
         />
         <StatCard
           title="Tasa de Éxito"
@@ -91,13 +156,14 @@ export default function Estadisticas() {
           value={totalClasses}
           icon={TrendingUp}
           variant="accent"
-          description="este mes"
+          description="total histórico"
         />
         <StatCard
           title="Ingresos"
           value={`${totalRevenue}€`}
           icon={Award}
           description="total cobrado"
+          variant="success"
         />
       </div>
 
@@ -123,6 +189,7 @@ export default function Estadisticas() {
                     className="text-xs fill-muted-foreground"
                     tickLine={false}
                     axisLine={false}
+                    allowDecimals={false}
                   />
                   <Tooltip
                     contentStyle={{
@@ -132,16 +199,16 @@ export default function Estadisticas() {
                     }}
                   />
                   <Legend />
-                  <Bar 
-                    dataKey="clases" 
+                  <Bar
+                    dataKey="clases"
                     name="Clases"
-                    fill="hsl(var(--primary))" 
+                    fill="hsl(var(--primary))"
                     radius={[4, 4, 0, 0]}
                   />
-                  <Bar 
-                    dataKey="alumnos" 
+                  <Bar
+                    dataKey="alumnos"
                     name="Nuevos Alumnos"
-                    fill="hsl(var(--accent))" 
+                    fill="hsl(var(--accent))"
                     radius={[4, 4, 0, 0]}
                   />
                 </BarChart>
@@ -175,7 +242,7 @@ export default function Estadisticas() {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number) => `${value}%`}
+                    formatter={(value: number) => `${value}`}
                     contentStyle={{
                       backgroundColor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
@@ -194,7 +261,7 @@ export default function Estadisticas() {
         {/* Weekly Trend */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Tendencia Semanal</CardTitle>
+            <CardTitle>Tendencia Semanal (Último mes)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[250px]">
@@ -211,6 +278,7 @@ export default function Estadisticas() {
                     className="text-xs fill-muted-foreground"
                     tickLine={false}
                     axisLine={false}
+                    allowDecimals={false}
                   />
                   <Tooltip
                     contentStyle={{
@@ -256,11 +324,10 @@ export default function Estadisticas() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div
-                      className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
-                        index === 0
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-secondary text-secondary-foreground'
-                      }`}
+                      className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${index === 0
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-secondary text-secondary-foreground'
+                        }`}
                     >
                       {index + 1}
                     </div>
@@ -283,48 +350,6 @@ export default function Estadisticas() {
         </Card>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="bg-primary/5 border-primary/20">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-2">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary">
-                <TrendingUp className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <h3 className="text-2xl font-bold">+18%</h3>
-              <p className="text-sm text-muted-foreground">
-                Crecimiento respecto al trimestre anterior
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-success/5 border-success/20">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-2">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-success">
-                <Award className="h-6 w-6 text-success-foreground" />
-              </div>
-              <h3 className="text-2xl font-bold">92%</h3>
-              <p className="text-sm text-muted-foreground">
-                Tasa de aprobados en examen práctico
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-accent/5 border-accent/20">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-2">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-accent">
-                <GraduationCap className="h-6 w-6 text-accent-foreground" />
-              </div>
-              <h3 className="text-2xl font-bold">156</h3>
-              <p className="text-sm text-muted-foreground">
-                Permisos expedidos este año
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }
