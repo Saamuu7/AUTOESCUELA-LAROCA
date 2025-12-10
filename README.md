@@ -1,4 +1,4 @@
-🚗 DRIVE_UP CRM — Sistema CRM para Autoescuelas
+🚗 LAROCA CRM — Sistema CRM para Autoescuelas
 
 Este repositorio contiene DRIVE_UP CRM, una plataforma web diseñada para la gestión completa de una autoescuela. El sistema está totalmente finalizado y preparado para entrega, instalación o despliegue en el entorno elegido por el cliente.
 
