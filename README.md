@@ -1,73 +1,104 @@
-# Welcome to your Lovable project
+🚗 DRIVE_UP CRM — Sistema CRM para Autoescuelas
 
-## Project info
+Este repositorio contiene DRIVE_UP CRM, una plataforma web diseñada para la gestión completa de una autoescuela. El sistema está totalmente finalizado y preparado para entrega, instalación o despliegue en el entorno elegido por el cliente.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+🧾 Descripción del proyecto
 
-## How can I edit this code?
+El CRM está desarrollado para optimizar la operativa diaria de una autoescuela, centralizando la administración de alumnos, clases, vehículos y profesores. La plataforma proporciona una interfaz moderna, rápida y adaptada a cualquier dispositivo.
 
-There are several ways of editing your application.
+Incluye:
 
-**Use Lovable**
+Panel principal con indicadores y métricas clave
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+Gestión de alumnos (altas, bajas, seguimiento y estado de cada uno)
 
-Changes made via Lovable will be committed automatically to this repo.
+Gestión de clases teóricas y prácticas
 
-**Use your preferred IDE**
+Control de profesores e instructores
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Gestión de vehículos disponibles
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Calendario integrado para agendar clases
 
-Follow these steps:
+Módulo de pagos y seguimiento de cuotas
+
+Sistema de notificaciones internas
+
+Ficha completa de cada alumno con progreso y exámenes
+
+Diseño responsive para móviles, tablets y ordenadores
+
+El objetivo es ofrecer una herramienta profesional y eficiente que mejore la organización interna y la atención a los alumnos.
+
+🛠 Tecnologías utilizadas
+
+El desarrollo del CRM se ha realizado con:
+
+React
+
+TypeScript
+
+Vite
+
+Tailwind CSS
+
+shadcn/ui
+
+React Router
+
+Zustand (o Redux) para gestión de estado
+
+Supabase / Firebase (opcional para versiones con backend)
+
+Estas tecnologías garantizan un rendimiento sólido, mantenimiento sencillo y una interfaz actual y escalable.
+
+🚀 Ejecución en local
+
+Para revisar, modificar o mantener el proyecto:
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# Clonar el repositorio
+git clone <URL_DEL_REPO>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Acceder al directorio
+cd DRIVE_UP_CRM
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Instalar dependencias
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Ejecutar en modo desarrollo
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Esto abrirá la aplicación en el navegador con recarga automática al editar.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+🏭 Build de producción
 
-**Use GitHub Codespaces**
+Para generar la versión final que se subirá al hosting del cliente:
+```sh
+npm run build
+```
+Esto generará la carpeta dist/ con todos los archivos optimizados.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+🌐 Despliegue
 
-## What technologies are used for this project?
+Los archivos de dist/ pueden instalarse en:
 
-This project is built with:
+Servidores como Vercel o Netlify
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Hostings tradicionales (cPanel, Plesk)
 
-## How can I deploy this project?
+Servidores privados (VPS)
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+Plataformas compatibles con sitios estáticos o SPA
 
-## Can I connect a custom domain to my Lovable project?
+El CRM puede funcionar sin backend si se configura en modo local-only o con almacenamiento en navegador. Para funcionalidades avanzadas, puede integrarse con API propia o servicios como Supabase.
 
-Yes, you can!
+📌 Estado del proyecto
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+El proyecto DRIVE_UP CRM está finalizado, estable y completamente operativo. Puede ampliarse con nuevos módulos, integraciones u otras funcionalidades a medida según los requisitos de la autoescuela.
+
+Si quieres, puedo generarte este README directamente en formato markdown, preparar variaciones más formales o adaptarlo a un cliente específico.
+
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
